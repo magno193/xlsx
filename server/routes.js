@@ -15,7 +15,7 @@ exports.ROUTES = {
     return response.end();
   },
   "/excel:GET": (request, response) => {
-    response.write("Excel:GET Route\n");
+    console.log("Excel:GET Route\n");
     const { data } = new DataGenerator(100, true);
     const worksheet = XLSX.utils.json_to_sheet(data, {
       cellStyles: true,
@@ -34,10 +34,21 @@ exports.ROUTES = {
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "SHEET");
-    const filePath = path.resolve(__dirname, "uploads", "SHEET.xlsx");
-    XLSX.writeFile(workbook, filePath);
-    response.write(JSON.stringify(filePath));
-    return response.end();
+    // const filePath = path.resolve(__dirname, "uploads", "SHEET.xlsx");
+    // XLSX.writeFile(workbook, filePath);
+    const headers = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
+      "Access-Control-Max-Age": 2592000, // 30 days
+      "Content-Type": "application/json",
+      /** add other headers as per requirement */
+    };
+    response.writeHead(200, headers);
+
+    return response.end(JSON.stringify(workbook));
   },
-  "excel:POST": (request, response) => {},
+  "excel:POST": (request, response) => {
+    response.write();
+    response.end();
+  },
 };
