@@ -34,20 +34,42 @@ exports.ROUTES = {
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "SHEET");
-    // const filePath = path.resolve(__dirname, "uploads", "SHEET.xlsx");
-    // XLSX.writeFile(workbook, filePath);
-    const headers = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
-      "Access-Control-Max-Age": 2592000, // 30 days
-      "Content-Type": "application/json",
-      /** add other headers as per requirement */
-    };
-    response.writeHead(200, headers);
+    const filePath = path.resolve(__dirname, "uploads", "SHEET.xlsx");
+    XLSX.writeFile(workbook, filePath);
+    let readStream = require("fs").createReadStream(filePath);
+    require("fs").unlink(filePath, (e) => console.log(err));
+    readStream.on("open", () => {
+      response.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      response.setHeader(
+        "Content-Disposition",
+        "attachment; filename=SHEET.xls"
+      );
+      response.setHeader("Access-Control-Allow-Origin", "*");
+      readStream.pipe(response);
+    });
+    readStream.on("error", (err) => {
+      console.log(err);
+      response.writeHead(400);
+      response.destroy();
+    });
+    request.setTimeout(12000, function () {
+      request.abort();
+    });
+    // const headers = {
+    //   "Access-Control-Allow-Origin": "*",
+    //   "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
+    //   "Access-Control-Max-Age": 2592000, // 30 days
+    //   "Content-Type": "application/json",
+    //   /** add other headers as per requirement */
+    // };
+    // response.writeHead(200, headers);
 
-    return response.end(JSON.stringify(workbook));
+    // return response.end(JSON.stringify({ workbook: workbook }));
   },
-  "excel:POST": (request, response) => {
+  "/excel:POST": (request, response) => {
     response.write();
     response.end();
   },

@@ -3,8 +3,18 @@ import { ref } from 'vue'
 import api from '../services/api.js'
 
 async function getExcel() {
-  const result = await (await api.getExcel()).json();
-  console.log(result);
+  const response = await api.getExcel();
+  if (response.blob) {
+    debugger;
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(new Blob([blob]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', "SHEET.xlsx");
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
 }
 
 function alertMsg() {
