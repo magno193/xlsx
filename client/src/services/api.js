@@ -1,13 +1,10 @@
 export default {
-  async downloadExcel(request) {
-    const response = await fetch("http://localhost:4000/excel", {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
-    return response;
+  async downloadXLSX () {
+    const response = await fetch('http://localhost:4000/excel-single')
+    return response
   },
-  async getExcel() {
-    const response = await fetch("http://localhost:4000/excel");
-    return response;
-  },
-};
+  async downloadZIP () {
+    const response = await fetch('http://localhost:4000/excel-multiple')
+    return response
+  }
+}
