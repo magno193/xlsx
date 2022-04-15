@@ -7,6 +7,11 @@ class XLSXService {
     this.data = data;
   }
 
+  mapData(data) {
+    this.data = data;
+    return this;
+  }
+
   createWorkSheet() {
     this.worksheet = XLSX.utils.json_to_sheet(this.data, {
       cellStyles: true,
@@ -48,10 +53,14 @@ class XLSXService {
     return { filePath, filename };
   }
 
+  createWorkBook() {
+    this.workbook = XLSX.utils.book_new();
+    return this;
+  }
+
   createXLSXBuffer(worksheet = this.worksheet, filename = "SHEET") {
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, filename);
-    const buffer = XLSX.write(workbook, {
+    XLSX.utils.book_append_sheet(this.workbook, worksheet, filename);
+    const buffer = XLSX.write(this.workbook, {
       type: "buffer",
       bookType: "xlsx",
     });

@@ -1,3 +1,4 @@
+const AdmZip = require("adm-zip");
 const DataGenerator = require("./mock/DataGenerator");
 const XLSXService = require("./services/XLSXService");
 exports.ROUTES = {
@@ -14,20 +15,6 @@ exports.ROUTES = {
   "/excel-single:GET": (request, response) => {
     console.log("Excel:GET SINGLE Route\n");
     const { data } = new DataGenerator(100, true);
-    const worksheet = XLSX.utils.json_to_sheet(data, {
-      cellStyles: true,
-    });
-    let alphabetic = [];
-    for (const iterator of Object.keys(worksheet).values()) {
-      const alphaName = iterator.replace(/\d/g, "");
-      const foundName = alphabetic.findIndex((v) => v === alphaName);
-      if (foundName >= 0) break;
-      alphabetic = [...alphabetic, iterator.replace(/\d/g, "")];
-    }
-    const columns = alphabetic.map((a) => a + "1");
-    for (const column of columns.values()) {
-      worksheet[column]["s"] = { font: { name: "Courier", sz: 24 } };
-    }
 
     const { filePath } = new XLSXService(data)
       .createWorkSheet()
@@ -36,7 +23,7 @@ exports.ROUTES = {
       .createXLSXFile();
 
     let readStream = require("fs").createReadStream(filePath);
-    require("fs").unlink(filePath, (err) => {
+    require("fs").unlink(filePath, err => {
       if (err) console.log(err);
     });
     readStream.on("open", () => {
@@ -56,19 +43,38 @@ exports.ROUTES = {
     request.setTimeout(12000, () => {
       request.abort();
     });
-    // const headers = {
-    //   "Access-Control-Allow-Origin": "*",
-    //   "Access-Control-Allow-Methods": "OPTIONS, POST, GET",
-    //   "Access-Control-Max-Age": 2592000, // 30 days
-    //   "Content-Type": "application/json",
-    //   /** add other headers as per requirement */
-    // };
-    // response.writeHead(200, headers);
-
-    // return response.end(JSON.stringify({ workbook: workbook }));
   },
-  "/excel:POST": (request, response) => {
-    response.write();
+  "/excel-multiple:GET": (request, response) => {
+    console.log("Excel:GET MULTIPLE Route\n");
+    const FIRST_NUMBER = 1 + +(Math.random() * 9).toFixed();
+    let count = FIRST_NUMBER;
+    const zip = new AdmZip();
+    while (count) {
+      const xlsxService = new XLSXService().createWorkBook();
+      const randomNumbers100 = 1 + +(Math.random() * 99).toFixed();
+      const { data } = new DataGenerator(randomNumbers100, true);
+      const { buffer, filename } = xlsxService
+        .mapData(data)
+        .createWorkSheet()
+        .separateAlphabeticValues()
+        .styleCells()
+        .createXLSXBuffer();
+
+      zip.addFile(`${filename}${count}.xls`, buffer, "comment");
+      count--;
+    }
+
+    const zipBuffer = zip.toBuffer();
+
+    response.writeHead(200, {
+      "Content-Type": "application/zip",
+      "Content-disposition": "attachment; filename=myFile.zip",
+      "Access-Control-Allow-Origin": "*",
+    });
+    // new Buffer is deprecated use Buffer.from() instead
+    response.write(Buffer.from(zipBuffer));
+    response.end(null, "binary");
+
     response.end();
   },
 };
